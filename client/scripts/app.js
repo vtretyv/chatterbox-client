@@ -1,6 +1,7 @@
 // YOUR CODE HERE:
 var App = function() {
   this.server = 'http://parse.sfm8.hackreactor.com/chatterbox/classes/messages';
+  this.rooms = [];
 };
 
 App.prototype.init = function() {
@@ -30,10 +31,18 @@ App.prototype.fetch = function() {
     type: 'GET',
     contentType: 'application/json',
     //data: "where=" data.results
+    data: {"order": "-createdAt"}, //$order('createdAt'),
     success: function(data) {
       console.log('chatterbox: Message fetched', data);
       for (var i = 0; i < data.results.length; i ++) {
-        app.renderMessage((data.results[i]).username + '     ' + (data.results[i]).text + '     ' + (data.results[i]).createdAt + '<br>');
+        var message = (data.results[i]).username + '     ' + (data.results[i]).text + '     ' + (data.results[i]).createdAt + '<br>';
+        app.renderMessage(message);
+        if (!app.rooms.includes(data.results[i].roomname)) {
+          app.rooms.push(data.results[i].roomname);
+          app.renderRoom(data.results[i].roomname);
+        }
+        // This is where we will have to append the messages to the rendered rooms, then hide them for later button functions.
+        app.addToRoom(data.results[i].roomname, message);
       }
     },
     error: function (data) {
@@ -41,6 +50,13 @@ App.prototype.fetch = function() {
       console.error('chatterbox: Failed to fetched message', data);
     }
   });
+};
+
+
+App.prototype.addToRoom = function (roomName, message) {
+  var chatDiv = $('<div>' + message + '</div>');
+  $(roomName).append(chatDiv);
+  $(roomName).hide();
 };
 
 App.prototype.clearMessages = function() {
@@ -58,8 +74,9 @@ App.prototype.renderMessage = function(message) {
   $('#chats').append(msg);  
 };
 
-App.prototype.renderRoom = function() {
-
+App.prototype.renderRoom = function(roomName) {
+  var roomsDiv = $('<div id="' + roomName + '"></div>');
+  $('#roomSelect').append(roomsDiv);
 };
 
 var app = new App();
